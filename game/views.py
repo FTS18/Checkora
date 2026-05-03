@@ -48,6 +48,7 @@ def make_move(request):
     game_data = request.session.get('game')
     game = ChessGame.from_dict(game_data) if game_data else ChessGame()
 
+    print(f"DEBUG: Move from ({from_row},{from_col}) to ({to_row},{to_col}) - FEN: {game.generate_fen_key()}", flush=True)
     success, message, captured, game_status = game.make_move(
         from_row, from_col, to_row, to_col, promotion_piece,
     )
@@ -191,6 +192,7 @@ def get_state(request):
         'player_color': game.player_color,
         'white_name': request.session.get('white_name', 'White'),
         'black_name': request.session.get('black_name', 'Black'),
+        'game_status': game.check_game_status(),
         'fen': game.generate_fen_key(),
     })
 

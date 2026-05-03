@@ -7,6 +7,11 @@
     <title>Sign In | Checkora</title>
     <link rel="stylesheet" href="{% static 'game/css/auth.css' %}">
     <link rel="icon" type="image/jpeg" href="{% static 'game/favicon.jpeg' %}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Chivo:wght@700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         .helptext { display: none; } /* Hide help text on login */
     </style>
@@ -14,6 +19,7 @@
 <body>
 
     <div class="header">
+        <img src="{% static 'game/favicon.jpeg' %}" alt="Checkora Logo" class="header-logo">
         <h1>Checkora</h1>
         <p>Welcome back! Sign in to continue</p>
     </div>

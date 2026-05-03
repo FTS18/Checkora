@@ -14,6 +14,11 @@
     </script>
     <!-- <script defer src="/_vercel/speed-insights/script.js"></script> -->
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Chivo:wght@700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="{% static 'game/css/board.css' %}">
 
     <!-- Vercel Web Analytics -->
@@ -36,11 +41,36 @@
 
 <body>
 
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <img src="{% static 'game/favicon.jpeg' %}" alt="Checkora Logo" class="nav-logo-img">
+            <h1>Checkora <span class="badge" id="modeBadge">PVP</span></h1>
+        </a>
+
+        <div class="nav-links">
+            <a href="/" class="nav-link active">Play</a>
+            <a href="#" class="nav-link">Rankings</a>
+            <a href="#" class="nav-link">History</a>
+            <a href="#" class="nav-link">Rules</a>
+        </div>
+
+        <div class="nav-auth">
+            {% if user.is_authenticated %}
+            <span class="welcome-msg">Welcome, <span class="username">{{ user.username }}</span></span>
+            <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn-signin">Sign In</a>
+            <a href="{% url 'register' %}" class="btn-register">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
     <!-- ========== WELCOME MESSAGE ========== -->
 
-    <div class="promo-overlay active" id="welcomeOverlay" style="background: var(--page-bg); z-index: 9999;">
+    <div class="promo-overlay active" id="welcomeOverlay" style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(15, 15, 26, 0.7); z-index: 9999;">
         <div class="promo-dialog" style="min-width: 320px; padding: 35px;">
-            <div class="promo-title" style="font-size: 1.6rem; color: #fff; margin-bottom: 10px;">Checkora</div>
+            <div class="promo-title" style="font-family: 'Chivo', sans-serif; font-size: 1.6rem; color: #fff; margin-bottom: 10px;">Checkora</div>
             <p style="color: #aaa; margin-bottom: 30px; font-size: 0.95rem;">Enter names and select a game mode.</p>
             <!-- Name Input Fields (Only for PvP) -->
             <div id="nameInputs" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
@@ -84,107 +114,94 @@
         </div>
     </div>
 
-    <!-- ========== HEADER ========== -->
-    <div class="header">
-        <h1>Checkora <span class="badge" id="modeBadge">PVP</span></h1>
-
-        <div class="auth-buttons">
-            {% if user.is_authenticated %}
-            <span class="welcome-msg">Welcome, <span class="username">{{ user.username }}</span></span>
-            <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
-            {% else %}
-            <a href="{% url 'login' %}" class="btn-signin">Sign In</a>
-            <a href="{% url 'register' %}" class="btn-register">Register</a>
-            {% endif %}
-        </div>
-    </div>
 
     <!-- ========== GAME ========== -->
     <div class="game-layout" style="visibility: hidden;">
 
-        <!-- Left Panel -->
-        <div class="panel">
-            <div class="card">
-                <div class="card-title">Captured by <span id="whiteCapturedName">White</span></div>
-                <div class="captured-list" id="whiteCaptured"></div>
-            </div>
-            <div class="card">
-                <div class="card-title">Captured by <span id="blackCapturedName">Black</span></div>
-                <div class="captured-list" id="blackCaptured"></div>
-            </div>
-        </div>
-
-        <!-- Board -->
+        <!-- Main Column: Board -->
         <div class="board-container">
-            <div class="turn-badge white" id="turnBadge">
-                <span id="turnBadgeText">White</span>'s Turn
-            </div>
-            <div class="clocks">
-                <div id="whiteClock" class="clock white active">
-                    <span class="label">
-                        <span id="whiteNameLabel">WHITE</span>
-                        <span id="whiteYouTag" style="display: none; color: #f0c040; margin-left: 4px; font-size: 0.8em;">(YOU)</span>
-                    </span>
-                    <span class="time" id="whiteTime">10:00</span>
+            <!-- Top Player (Opponent) -->
+            <div class="player-info" id="blackClock">
+                <div class="clock" id="bTimeDisplay">10:00</div>
+                <div class="divider"></div>
+                <div class="player-meta">
+                    <div class="player-name" id="blackNameDisplay">Black</div>
+                    <div class="check-pill" id="bCheckPill">CHECK</div>
                 </div>
+                <div class="player-status-meta">
+                    <span class="material-score" id="bScore"></span>
+                </div>
+            </div>
 
-                <div id="blackClock" class="clock black">
-                    <span class="label">
-                        <span id="blackNameLabel">BLACK</span>
-                        <span id="blackYouTag" style="display: none; color: #f0c040; margin-left: 4px; font-size: 0.8em;">(YOU)</span>
-                    </span>
-                    <span class="time" id="blackTime">10:00</span>
-                </div>
-            </div>
+            <!-- Board Area -->
             <div class="board-outer">
                 <div class="board-row">
-                    <div class="ranks" id="ranksLabels">
-                        <span>8</span><span>7</span><span>6</span><span>5</span>
-                        <span>4</span><span>3</span><span>2</span><span>1</span>
-                    </div>
-                    <div class="chessboard" id="board"></div>
+                    <div class="ranks" id="ranksLabels" style="display: none;"></div>
+                    <div class="chessboard turn-white" id="board"></div>
                 </div>
-                <div class="files" id="filesLabels">
-                    <span>a</span><span>b</span><span>c</span><span>d</span>
-                    <span>e</span><span>f</span><span>g</span><span>h</span>
+                <div class="files" id="filesLabels" style="display: none;"></div>
+            </div>
+
+            <!-- Bottom Player (User) -->
+            <div class="player-info active" id="whiteClock">
+                <div class="clock" id="wTimeDisplay">10:00</div>
+                <div class="divider"></div>
+                <div class="player-meta">
+                    <div class="player-name" id="whiteNameDisplay">White</div>
+                    <div class="check-pill" id="wCheckPill">CHECK</div>
+                </div>
+                <div class="player-status-meta">
+                    <span class="material-score" id="wScore"></span>
                 </div>
             </div>
 
             <div class="status-bar" id="statusBar"></div>
+
+            <div class="material-dashboard monolith-element">
+                <table class="cap-analytics-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 120px; font-size: 0.6rem; color: rgba(255,255,255,0.2);">MATERIAL TRACKER</th>
+                            <th>♟</th>
+                            <th>♞</th>
+                            <th>♝</th>
+                            <th>♜</th>
+                            <th>♛</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="wCapAnalyticsRow"></tr>
+                        <tr id="bCapAnalyticsRow"></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- Right Panel -->
-        <div class="panel">
-            <div class="card">
-                <div class="card-title">Board Theme</div>
-                <div class="theme-switcher">
-                    <button class="theme-btn active" data-theme="classic" title="Classic" aria-label="Classic theme"
-                        aria-pressed="true" type="button"></button>
-                    <button class="theme-btn" data-theme="dark" title="Dark" aria-label="Dark theme"
-                        aria-pressed="false" type="button"></button>
-                    <button class="theme-btn" data-theme="green" title="Green" aria-label="Green theme"
-                        aria-pressed="false" type="button"></button>
-                    <button class="theme-btn" data-theme="blue" title="Blue" aria-label="Blue theme"
-                        aria-pressed="false" type="button"></button>
-                </div>
-                <div style="margin-top: 8px; font-size: 11px; color: rgba(255,255,255,0.5); text-align: center;">
-                    Classic · Dark · Green · Blue
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-title">Game Controls</div>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button class="btn btn-gold" id="newPvPBtn">Pass & Play (PvP)</button>
-                    <button class="btn btn-gold" id="newAIBtn">Play vs AI</button>
-                    <button class="btn btn-gold" id="copyFenBtn">Copy FEN</button>
-                    <div id="flipControls" style="display: flex; flex-direction: column; gap: 8px;">
-                        <button class="btn btn-gold" id="autoFlipBtn">Auto-Flip: OFF</button>
+        <!-- Sidebar Column -->
+            <div class="sidebar-content">
+                <div class="panel">
+
+                    <div class="theme-switcher">
+                        <button class="theme-btn" data-theme="classic" title="Classic" style="background: #769656;"></button>
+                        <button class="theme-btn" data-theme="dark" title="Dark" style="background: #312e2b;"></button>
+                        <button class="theme-btn" data-theme="green" title="Green" style="background: #2e3b23;"></button>
+                        <button class="theme-btn" data-theme="blue" title="Blue" style="background: #2b3a4a;"></button>
                     </div>
-                    <button class="btn btn-gold" id="drawBtn" style="display: none;">Offer Draw</button>
-                    <button class="btn btn-gold" id="pauseBtn">Pause</button>
-                    <button class="btn" id="resignBtn" style="background: #333; color: #fff;">Resign</button>
-                </div>
+
+                    <div class="button-grid">
+                        <button class="btn btn-gold" id="newPvPBtn">PVP</button>
+                        <button class="btn btn-gold" id="newAIBtn">VS AI</button>
+                        <button class="btn btn-secondary" id="copyFenBtn">FEN</button>
+                        <button class="btn btn-secondary" id="autoFlipBtn">FLIP</button>
+                    </div>
+
+                    <div class="action-toolbar">
+                        <button class="btn btn-secondary tool-btn" id="drawBtn" title="Offer Draw">½</button>
+                        <button class="btn btn-secondary tool-btn" id="pauseBtn" title="Pause/Resume">▶</button>
+                        <button class="btn btn-danger tool-btn" id="resignBtn" title="Resign">⚐</button>
+                    </div>
             </div>
+
             <div class="card">
                 <div class="card-title">Move History</div>
                 <div class="moves-list" id="movesList">
@@ -279,6 +296,19 @@
     </div>
 
     <style>
+        .chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, var(--sq-size));
+    grid-template-rows: repeat(8, var(--sq-size));
+    width: calc(8 * var(--sq-size));
+    height: calc(8 * var(--sq-size));
+    border: none;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    position: relative;
+    user-select: none;
+    background: #404040;
+    margin: 0 auto;
+}
     </style>
     <!-- ========================================================
          JAVASCRIPT
@@ -315,6 +345,7 @@
             let playerColor = 'white';
             let flipped = false;
             let autoFlip = false;
+            let currentStatus = 'ok';
 
             /* ==========================================================
             DOM REFERENCES
@@ -323,8 +354,8 @@
             const turnEl = document.getElementById('turnBadge');
             const statusEl = document.getElementById('statusBar');
             const movesEl = document.getElementById('movesList');
-            const wCapEl = document.getElementById('whiteCaptured');
-            const bCapEl = document.getElementById('blackCaptured');
+            const wCapEl = document.getElementById('wCapAnalyticsRow');
+            const bCapEl = document.getElementById('bCapAnalyticsRow');
             const pauseBtn = document.getElementById('pauseBtn');
             const promoOverlay = document.getElementById('promoOverlay');
             const promoChoices = document.getElementById('promoChoices');
@@ -460,6 +491,12 @@
                 }
 
                 if (drawBtn) drawBtn.style.display = gameMode === 'pvp' ? 'block' : 'none';
+                currentStatus = data.game_status || 'ok';
+                if (currentStatus === 'stalemate') {
+                    showStatus('Stalemate!', false);
+                } else if (currentStatus === 'ok') {
+                    showStatus('', false);
+                }
 
                 updateTurn();
                 updateMoves(data.move_history);
@@ -487,13 +524,31 @@
                         d.ondragover = e => e.preventDefault();
                         d.ondrop = e => onDrop(e, r, c);
 
-                        // ADD THESE LINES RIGHT HERE — before boardEl.appendChild(d)
                         d.setAttribute('tabindex', '0');
                         d.setAttribute('role', 'gridcell');
                         d.setAttribute('data-row', r);
                         d.setAttribute('data-col', c);
                         d.setAttribute('aria-label', getSquareLabel(r, c));
                         d.onkeydown = (e) => handleSquareKeydown(e, r, c);
+
+                        const ranks = ['8','7','6','5','4','3','2','1'];
+                        const files = ['a','b','c','d','e','f','g','h'];
+                        
+                        // Etched Ranks (only on first file)
+                        if (vc === 0) {
+                            const rankSpan = document.createElement('span');
+                            rankSpan.className = 'coord coord-rank';
+                            rankSpan.textContent = ranks[vr];
+                            d.appendChild(rankSpan);
+                        }
+                        
+                        // Etched Files (only on last rank)
+                        if (vr === 7) {
+                            const fileSpan = document.createElement('span');
+                            fileSpan.className = 'coord coord-file';
+                            fileSpan.textContent = files[vc];
+                            d.appendChild(fileSpan);
+                        }
 
                         boardEl.appendChild(d);
                     }
@@ -505,20 +560,41 @@
             function updateLabels() {
                 const ranks = ['8','7','6','5','4','3','2','1'];
                 const files = ['a','b','c','d','e','f','g','h'];
-                if (flipped) {
-                    ranks.reverse();
-                    files.reverse();
-                }
                 const rLabels = document.getElementById('ranksLabels');
                 const fLabels = document.getElementById('filesLabels');
                 if (rLabels) rLabels.innerHTML = ranks.map(r => `<span>${r}</span>`).join('');
                 if (fLabels) fLabels.innerHTML = files.map(f => `<span>${f}</span>`).join('');
             }
 
+            function highlightCheck() {
+                // Clear all first
+                boardEl.querySelectorAll('.square.check').forEach(el => el.classList.remove('check'));
+                
+                // Clear pills
+                document.getElementById('wCheckPill')?.classList.remove('active');
+                document.getElementById('bCheckPill')?.classList.remove('active');
+                
+                if (currentStatus === 'check') {
+                    const targetKing = turn === 'white' ? 'K' : 'k';
+                    const pillId = turn === 'white' ? 'wCheckPill' : 'bCheckPill';
+                    document.getElementById(pillId)?.classList.add('active');
+                    
+                    for (let r = 0; r < 8; r++) {
+                        for (let c = 0; c < 8; c++) {
+                            if (board[r][c] === targetKing) {
+                                sq(r, c).classList.add('check');
+                                return; // Only one king can be in check
+                            }
+                        }
+                    }
+                }
+            }
+
             function syncPieces() {
                 for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
                     const el = sq(r, c);
                     el.innerHTML = '';
+                    
                     const p = board[r][c];
                     if (!p) continue;
 
@@ -530,6 +606,8 @@
                     img.ondragend = () => dragging = false;
                     el.appendChild(img);
                 }
+                
+                highlightCheck();
                 refreshHighlights();
                 markPlayable();
             }
@@ -705,6 +783,7 @@
                         whiteTime = data.white_time;
                         blackTime = data.black_time;
 
+                        currentStatus = data.game_status;
                         selected = null;
                         hints = [];
                         updateTurn();
@@ -714,14 +793,12 @@
                         renderClocks();
                         startTimer();
 
-                        if (data.game_status === 'checkmate') {
+                        if (currentStatus === 'checkmate') {
                             endGame('checkmate', turn);
-                        } else if (data.game_status === 'stalemate') {
+                        } else if (currentStatus === 'stalemate') {
                             endGame('stalemate', turn);
-                        } else if (data.game_status === 'check') {
-                            showStatus(turn === 'white' ? 'White is in check!' : 'Black is in check!', true);
                         } else {
-                            showStatus('', false);
+                            showStatus('', false); // Clear status bar, use cockpit pill instead
                         }
 
                         if (gameMode === 'ai' && turn !== playerColor && !gameOver) {
@@ -751,6 +828,7 @@
 
                         selected = null;
                         hints = [];
+                        currentStatus = data.game_status;
                         updateTurn();
                         updateMoves(data.move_history);
                         updateCaptured(data.captured_pieces);
@@ -762,8 +840,6 @@
                             endGame('checkmate', turn);
                         } else if (data.game_status === 'stalemate') {
                             endGame('stalemate', turn);
-                        } else if (data.game_status === 'check') {
-                            showStatus('You are in check!', true);
                         } else {
                             showStatus('Your turn.', false);
                         }
@@ -808,21 +884,13 @@
             UI UPDATES
             ========================================================== */
             function updateTurn() {
-                const badge = turnEl;
-                badge.className = 'turn-badge ' + turn;
+                // Highlight the clock in the sidebar
+                document.getElementById('whiteClock')?.classList.toggle('active', turn === 'white');
+                document.getElementById('blackClock')?.classList.toggle('active', turn === 'black');
                 
-                let label = turn.charAt(0).toUpperCase() + turn.slice(1) + "'s Turn";
-                if (gameMode === 'ai') {
-                    if (turn === playerColor) {
-                        label = "Your Turn";
-                    } else {
-                        label = "AI is thinking...";
-                    }
-                }
-                badge.textContent = label;
-                
-                wCapEl.classList.toggle('active', turn === 'white');
-                bCapEl.classList.toggle('active', turn === 'black');
+                // Update board state class
+                boardEl.classList.remove('turn-white', 'turn-black');
+                boardEl.classList.add('turn-' + turn);
             }
 
             function updateMoves(history) {
@@ -844,9 +912,52 @@
             }
 
             function updateCaptured(cap) {
-                wCapEl.innerHTML = bCapEl.innerHTML = '';
-                cap.white.forEach(p => wCapEl.innerHTML += `<img src="${PIECE_IMG[pKey(p)]}" class="captured-img">`);
-                cap.black.forEach(p => bCapEl.innerHTML += `<img src="${PIECE_IMG[pKey(p)]}" class="captured-img">`);
+                const vals = { 'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9 };
+                const sortOrder = ['p', 'n', 'b', 'r', 'q'];
+                
+                const renderToRow = (list, rowId, sideColor) => {
+                    const el = document.getElementById(rowId);
+                    if (!el) return 0;
+                    
+                    let total = 0;
+                    const counts = {};
+                    list.forEach(p => { 
+                        const k = p.toLowerCase(); 
+                        counts[k] = (counts[k]||0)+1; 
+                        total += vals[k] || 0; 
+                    });
+
+                    // Dynamic Labeling based on Mode
+                    let label = '';
+                    let labelColor = '#fff';
+                    const isPvP = (typeof gameMode !== 'undefined' && gameMode === 'pvp');
+
+                    if (isPvP) {
+                        label = sideColor === 'white' ? 'White Took' : 'Black Took';
+                    } else {
+                        const isYou = (typeof playerColor !== 'undefined' && playerColor === sideColor);
+                        label = isYou ? 'You Took' : 'Enemy Took';
+                        if (!isYou) labelColor = 'rgba(255,255,255,0.4)';
+                    }
+
+                    let html = `<td class="player-label" style="color: ${labelColor}; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">${label}</td>`;
+                    sortOrder.forEach(k => {
+                        html += `<td>${counts[k] || '-'}</td>`;
+                    });
+                    el.innerHTML = html;
+                    return total;
+                };
+
+                const wVal = renderToRow(cap.white, 'wCapAnalyticsRow', 'white');
+                const bVal = renderToRow(cap.black, 'bCapAnalyticsRow', 'black');
+
+                const wScore = document.getElementById('wScore');
+                const bScore = document.getElementById('bScore');
+                if (wScore && bScore) {
+                    const diff = wVal - bVal;
+                    wScore.textContent = diff > 0 ? `+${diff}` : '';
+                    bScore.textContent = diff < 0 ? `+${Math.abs(diff)}` : '';
+                }
             }
 
             function showStatus(msg, err) {
@@ -892,16 +1003,20 @@
             function formatTime(t) { return fmt(t); }
 
             function renderClocks() {
-                const wTime = document.getElementById('whiteTime');
-                const bTime = document.getElementById('blackTime');
-                if (wTime) wTime.textContent = formatTime(whiteTime);
-                if (bTime) bTime.textContent = formatTime(blackTime);
+                const wTimeEl = document.getElementById('wTimeDisplay');
+                const bTimeEl = document.getElementById('bTimeDisplay');
+                
+                if (wTimeEl) {
+                    wTimeEl.textContent = formatTime(whiteTime);
+                    wTimeEl.parentElement.classList.toggle('low', whiteTime < 30);
+                }
+                if (bTimeEl) {
+                    bTimeEl.textContent = formatTime(blackTime);
+                    bTimeEl.parentElement.classList.toggle('low', blackTime < 30);
+                }
 
-                const whiteClock = document.getElementById('whiteClock');
-                const blackClock = document.getElementById('blackClock');
-                if (whiteClock) whiteClock.classList.toggle('active', turn === 'white');
-                if (blackClock) blackClock.classList.toggle('active', turn === 'black');
-
+                document.getElementById('whiteClock')?.classList.toggle('active', turn === 'white');
+                document.getElementById('blackClock')?.classList.toggle('active', turn === 'black');
                 const wYou = document.getElementById('whiteYouTag');
                 const bYou = document.getElementById('blackYouTag');
                 if (wYou) wYou.style.display = (gameMode === 'ai' && playerColor === 'white') ? 'inline' : 'none';
@@ -909,7 +1024,7 @@
             }
 
             function updatePauseUI() {
-                pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+                pauseBtn.innerHTML = paused ? '▶' : '⏸';
             }
 
             function startTimer() {
@@ -1177,6 +1292,19 @@
             /* ==========================================================
             INIT
             ========================================================== */
+            // Mobile Toggle Controls
+            const toggleControlsBtn = document.getElementById('toggleControlsBtn');
+            const controlsPanel = document.getElementById('controlsPanel');
+            if (toggleControlsBtn && controlsPanel) {
+                toggleControlsBtn.onclick = () => {
+                    controlsPanel.classList.toggle('active');
+                    const isActive = controlsPanel.classList.contains('active');
+                    toggleControlsBtn.textContent = isActive ? 'Hide Controls' : 'Show Controls';
+                    toggleControlsBtn.style.background = isActive ? 'rgba(255,255,255,0.1)' : '';
+                    toggleControlsBtn.style.color = isActive ? '#fff' : '';
+                };
+            }
+
             loadGame();
         })();
     </script>

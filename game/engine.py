@@ -159,8 +159,11 @@ class ChessGame:
                 stderr=subprocess.PIPE,
                 text=True,
             )
-            stdout, _ = proc.communicate(input=command, timeout=5)
-            return stdout.strip()
+            stdout, stderr = proc.communicate(input=command, timeout=5)
+            output = stdout.strip()
+            if stderr:
+                print(f"ENGINE ERR: {stderr}", flush=True)
+            return output
         except (subprocess.TimeoutExpired, OSError):
             return None
 

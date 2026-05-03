@@ -235,6 +235,12 @@ def validate_move(turn, fr, fc, tr, tc, silent=False):
         'k': lambda: valid_king(turn, fr, fc, tr, tc),
     }
     is_valid = validators.get(piece.lower(), lambda: False)()
+    
+    # NEW: Also check if the move leaves our king in check
+    if is_valid:
+        move_obj = Move(fr, fc, tr, tc, NO_PROMOTION)
+        if leaves_king_in_check(move_obj, turn):
+            is_valid = False
 
     if is_valid and not silent:
         print('VALID')
@@ -687,6 +693,8 @@ def run():
             board64 = next(tokens)
             rights = next(tokens)
             turn = next(tokens)
+            # epR epC
+            next(tokens); next(tokens)
             fr = int(next(tokens))
             fc = int(next(tokens))
             tr = int(next(tokens))
@@ -698,6 +706,8 @@ def run():
             board64 = next(tokens)
             rights = next(tokens)
             turn = next(tokens)
+            # epR epC
+            next(tokens); next(tokens)
             row = int(next(tokens))
             col = int(next(tokens))
             load_board(board64)
@@ -706,7 +716,10 @@ def run():
         elif command == 'ATTACKED':
             board64 = next(tokens)
             rights = next(tokens)
+            # turn color for attacked square logic
             attacker_color = next(tokens)
+            # epR epC
+            next(tokens); next(tokens)
             row = int(next(tokens))
             col = int(next(tokens))
             load_board(board64)
@@ -716,6 +729,8 @@ def run():
             board64 = next(tokens)
             rights = next(tokens)
             turn = next(tokens)
+            # epR epC
+            next(tokens); next(tokens)
             fr = int(next(tokens))
             fc = int(next(tokens))
             tr = int(next(tokens))
@@ -728,6 +743,9 @@ def run():
             board64 = next(tokens)
             rights = next(tokens)
             turn = next(tokens)
+            # Consume en-passant target row/col (epR epC)
+            next(tokens) 
+            next(tokens)
             load_board(board64)
             load_castling_rights(rights)
             handle_status(turn)
@@ -735,6 +753,9 @@ def run():
             board64 = next(tokens)
             rights = next(tokens)
             turn = next(tokens)
+            # Consume en-passant target row/col (epR epC)
+            next(tokens)
+            next(tokens)
             depth = int(next(tokens))
             load_board(board64)
             load_castling_rights(rights)
